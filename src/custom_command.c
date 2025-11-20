@@ -1,3 +1,4 @@
+#define _GNU_SOURCE // d_type 사용을 위함
 #include "custom_command.h"
 
 // 사용자 정의 명령어 + execvp 처리
@@ -6,7 +7,7 @@ int custom_command(char** argv) {
     char* cmd = argv[0];
     int status = -1;
 
-    // 1. 내부 구현된 명령어 목록 확인
+    // 1. 내부 구현된 목록
     if (strcmp(cmd, "ls") == 0) {
         status = custom_ls(argv);
     } else if (strcmp(cmd, "pwd") == 0) {
@@ -45,7 +46,7 @@ int custom_command(char** argv) {
     return -1;  // -1을 반환하여 외부에서 perror 처리를 유도
 }
 
-// 아래는 사용자 설정 함수 프로토타입 예시
+// 사용자 설정 함수 프로토타입 예시 (반환값 1은 오류, 0은 정상작동)
 // 사용자 설정 ls 기능 함수 (여러 옵션기능을 추가해야됨)
 int custom_ls(char** argv) {
     // 1. 현재 디렉토리를 기본 경로로 설정
@@ -62,15 +63,26 @@ int custom_ls(char** argv) {
     }
 
     // 3. 디렉토리 내용을 읽고 표준 출력(FD 1)으로 내보냅니다.
+    //fprintf(stdout, "───────────────────────────────────────────\n");
+    //fprintf(stdout, "타입  | 파일명\n");
+    //fprintf(stdout, "───────────────────────────────────────────\n");
+
     while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name,".") == 0 || strcmp(entry->d_name,"..") == 0){
+            continue;
+        }
+        
         // 파일 이름을 표준 출력에 씁니다.
         // fprintf(stdout, ...) 또는 printf(...)를 사용하면 FD 1에 씁니다.
         // **FD 1은 이미 파이프나 파일로 리다이렉션되어 있을 수 있습니다.**
         // 예 dup2로 디스크립션이 변경되어 있는 경우에 출력으로 지정하면 해당
         // 출력에 해당하는 파이프로 출력됨
-        fprintf(stdout, "%s    ", entry->d_name);
+        //const char* type_str = get_file_type_string(entry->d_type);
+        //fprintf(stdout, "[%s]   | %s\n", type_str, entry->d_name);
+        
+        fprintf(stdout, "%s\n", entry->d_name);
     }
-    fprintf(stdout, "\n");
+    //fprintf(stdout, "───────────────────────────────────────────\n");
 
     // 4. 리소스 정리
     closedir(dir);
@@ -78,7 +90,19 @@ int custom_ls(char** argv) {
     // 5. 성공 반환
     return 0;  // 0은 성공 (EXIT_SUCCESS)을 의미
 }
-int custom_pwd(char** argv) { return 0; }
+int custom_pwd(char** argv) { 
+    char cwd[MAX_CMD_LEN];
+
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("%s\n",cwd);
+    } else {
+        perror("getcwd");
+        return 1;
+    }
+    return 0; 
+}
+
+// 개발안됨
 int custom_mkdir(char** argv) { return 0; }
 int custom_rmdir(char** argv) { return 0; }
 int custom_ln(char** argv) { return 0; }
@@ -87,3 +111,28 @@ int custom_rm(char** argv) { return 0; }
 int custom_mv(char** argv) { return 0; }
 int custom_cat(char** argv) { return 0; }
 int custom_grep(char** argv) { return 0; }
+
+
+// 유틸리티 함수
+const char* get_file_type_string(unsigned char d_type) {
+    switch (d_type) {
+        case DT_REG:
+            return "F";    // 일반 파일 (Regular) File
+        case DT_DIR:
+            return "D";     // 디렉터리 Dir
+        case DT_LNK:
+            return "L";    // 심볼릭 링크 Link
+        case DT_FIFO:
+            return "F";    // 명명된 파이프 FIFO
+        case DT_SOCK:
+            return "S";  // 소켓 Socket
+        case DT_CHR:
+            return "C";   // 문자 장치 C-Dev
+        case DT_BLK:
+            return "B";   // 블록 장치 B-Dev
+        case DT_UNKNOWN:
+            return "U"; // 알 수 없음 Unknown
+        default:
+            return "O";
+    }
+}

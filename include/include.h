@@ -13,8 +13,8 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <errno.h>
 #include <dirent.h>
+#include <errno.h>
 
 // 사용자 함수
 #include "signal_func.h"

@@ -7,6 +7,8 @@
 // 반환: 0 (성공), -1 (실패, execvp 시도 필요), 또는 실행 함수의 종료 코드
 int custom_command(char **argv);
 
+// 명령어 함수  
+// 반환: 1 (오류), 0 (성공)
 int custom_ls(char **argv);
 int custom_pwd(char **argv);
 int custom_mkdir(char **argv);
@@ -17,5 +19,8 @@ int custom_rm(char **argv);
 int custom_mv(char **argv);
 int custom_cat(char **argv);
 int custom_grep(char **argv);
+
+// 유틸리티 함수
+const char* get_file_type_string(unsigned char d_type);
 
 #endif // CUSTOM_COMMAND_H

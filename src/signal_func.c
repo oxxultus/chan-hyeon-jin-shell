@@ -12,7 +12,6 @@ void shell_siganl_init(){
     
 }
 
-
 void shell_signal_handler(int signo) {
     // 아무것도 하지 않음 (신호 무시)
     // SIGCHLD는 백그라운드 프로세스 관리를 위해 별도로 처리할 수 있으나, 
