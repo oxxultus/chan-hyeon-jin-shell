@@ -46,6 +46,7 @@ Makefile.local
 # Visual Studio Code 설정 디렉토리 (사용자가 요청함)
 # workspace별 설정, tasks, launch 설정 등이 포함되므로 제외
 .vscode/
+.clang-format
 
 # VS Code Workspace 파일
 *.code-workspace
