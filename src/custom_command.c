@@ -169,10 +169,81 @@ int custom_cp(char** argv) {
     fclose(dest);
 return 0;
  }
-int custom_rm(char** argv) { return 0; }
-int custom_mv(char** argv) { return 0; }
-int custom_cat(char** argv) { return 0; }
-int custom_grep(char** argv) { return 0; }
+int custom_rm(char** argv) {
+ if (argv[1] == NULL) {
+        fprintf(stderr, "삭제할 파일 이름을 입력하세요.\n");
+        return 1;
+    }
+
+    if (unlink(argv[1]) != 0) {
+        perror("rm");
+        return 1;
+    }
+    return 0;
+ }
+
+ int custom_mv(char** argv) {
+    if (argv[1] == NULL || argv[2] == NULL) {
+        fprintf(stderr, "사용법: mv <원본파일> <새파일>\n");
+        return 1;
+    }
+
+    if (rename(argv[1], argv[2]) != 0) {
+        perror("mv");
+        return 1;
+    }
+
+    return 0;
+}
+
+int custom_cat(char** argv) {
+    if (argv[1] == NULL) {
+        fprintf(stderr, "사용법: cat <파일명>\n");
+        return 1;
+    }
+
+    FILE *fp = fopen(argv[1], "r");
+    if (fp == NULL) {
+        perror("cat");
+        return 1;
+    }
+
+    char buffer[4096];
+    size_t bytes;
+
+    while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+        fwrite(buffer, 1, bytes, stdout);
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+int custom_grep(char** argv) {
+    if (argv[1] == NULL || argv[2] == NULL) {
+        fprintf(stderr, "사용법: grep <검색어> <파일>\n");
+        return 1;
+    }
+
+    char* keyword = argv[1];
+    char* filename = argv[2];
+
+    FILE* fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("grep");
+        return 1;
+    }
+
+    char line[4096];
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        if (strstr(line, keyword) != NULL) {
+            printf("%s", line);
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
 
 
 // 유틸리티 함수
