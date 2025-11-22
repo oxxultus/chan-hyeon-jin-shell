@@ -1,6 +1,6 @@
 #define _GNU_SOURCE // d_type 사용을 위함
 #include "custom_command.h"
-
+#include <sys/stat.h>  // mkdir 관련 함수 
 // 사용자 정의 명령어 + execvp 처리
 // 반환: 0 (성공), -1 (실패, execvp 시도 필요), 또는 실행 함수의 종료 코드
 int custom_command(char** argv) {
@@ -103,10 +103,72 @@ int custom_pwd(char** argv) {
 }
 
 // 개발안됨
-int custom_mkdir(char** argv) { return 0; }
-int custom_rmdir(char** argv) { return 0; }
-int custom_ln(char** argv) { return 0; }
-int custom_cp(char** argv) { return 0; }
+int custom_mkdir(char** argv) {
+	if (argv[1] == NULL) { // 파일 끝까지 확인 후, 디렉토리 이름이 제공되지 않은 경우
+        fprintf(stderr, "생성할 디렉토리 이름을 지정해주세요\n");
+        return 1; // 오류 코드 반환
+    }
+
+    // 삭제 권한은 0777: rwxrwxrwx 권한으로 디렉토리 생성
+    if (mkdir(argv[1], 0777) != 0) {
+        perror("mkdir");
+        return 1;
+    }
+	 return 0;
+ }
+int custom_rmdir(char** argv) {
+ 	 if (argv[1] == NULL) { // 파일 끝까지 확인 후, 디렉토리 이름이 없을 경우
+        fprintf(stderr, "삭제할 디렉토리 이름을 지정해주세요\n");
+        return 1; // 오류 코드 반환
+    }
+
+    if (rmdir(argv[1]) != 0) {
+        perror("rmdir");
+        return 1;
+    }
+	 return 0;
+ }
+int custom_ln(char** argv) { 
+ if (argv[1] == NULL || argv[2] == NULL) { // 원본 파일과 링크 파일 이름이 제공되었는지 확인
+        fprintf(stderr, "원본 파일과 링크 파일 이름을 확인해주세요\n");
+        return 1; // 오류 코드 반환
+    }
+
+    // 하드링크 생성
+    if (link(argv[1], argv[2]) != 0) {
+        perror("ln");
+        return 1; // 오류 반환
+    }
+return 0;
+ }
+int custom_cp(char** argv) { 
+  if(argv[1] == NULL || argv[2] == NULL) {
+        fprintf(stderr, "원본 파일과 복사할 파일의 이름을 확인해주세요\n"); // 원본 파일과 복사할 파일 이름이 제공되었는지 확인
+        return 1;
+    }
+
+    // FILE* f = fopen("파일명.형식", "모드");
+    FILE *src = fopen(argv[1], "rb"); // rb : 바이너리 읽기 모드
+    if (src == NULL) { // 원본 파일 열기 실패
+        perror("원본");
+        return 1;
+    }
+    FILE *dest = fopen(argv[2], "wb"); // wb : 바이너리 쓰기 모드
+    if (dest == NULL) { // 복사할 파일 열기 실패
+        perror("복사본");
+        fclose(src);
+        return 1;
+    }
+
+    char buffer[4096]; // 원본 파일에서 데이터를 읽어올 버퍼 생성
+    size_t bytes;
+    while ((bytes = fread(buffer, 1, sizeof(buffer), src)) > 0) {
+        fwrite(buffer, 1, bytes, dest);
+    }
+    fclose(src);
+    fclose(dest);
+return 0;
+ }
 int custom_rm(char** argv) { return 0; }
 int custom_mv(char** argv) { return 0; }
 int custom_cat(char** argv) { return 0; }
