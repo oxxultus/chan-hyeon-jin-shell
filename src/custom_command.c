@@ -65,44 +65,7 @@ int custom_ls(char** argv) {
     // 3. 디렉토리 내용을 읽고 표준 출력(FD 1)으로 내보냅니다.
     //fprintf(stdout, "───────────────────────────────────────────\n");
     //fprintf(stdout, "타입  | 파일명\n");
-    //fprintf(stdout, "───────────────────────────────────────────\n");
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name,".") == 0 || strcmp(entry->d_name,"..") == 0){
-            continue;
-        }
-        
-        // 파일 이름을 표준 출력에 씁니다.
-        // fprintf(stdout, ...) 또는 printf(...)를 사용하면 FD 1에 씁니다.
-        // **FD 1은 이미 파이프나 파일로 리다이렉션되어 있을 수 있습니다.**
-        // 예 dup2로 디스크립션이 변경되어 있는 경우에 출력으로 지정하면 해당
-        // 출력에 해당하는 파이프로 출력됨
-        //const char* type_str = get_file_type_string(entry->d_type);
-        //fprintf(stdout, "[%s]   | %s\n", type_str, entry->d_name);
-        
-        fprintf(stdout, "%s\n", entry->d_name);
-    }
-    //fprintf(stdout, "───────────────────────────────────────────\n");
-
-    // 4. 리소스 정리
-    closedir(dir);
-
-    // 5. 성공 반환
-    return 0;  // 0은 성공 (EXIT_SUCCESS)을 의미
-}
-int custom_pwd(char** argv) { 
-    char cwd[MAX_CMD_LEN];
-
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("%s\n",cwd);
-    } else {
-        perror("getcwd");
-        return 1;
-    }
-    return 0; 
-}
-
-// 개발안됨
+    //fprintf(stdout, "───────────────────료
 int custom_mkdir(char** argv) {
 	if (argv[1] == NULL) { // 파일 끝까지 확인 후, 디렉토리 이름이 제공되지 않은 경우
         fprintf(stderr, "생성할 디렉토리 이름을 지정해주세요\n");
