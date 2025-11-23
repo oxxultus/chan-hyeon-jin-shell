@@ -79,62 +79,41 @@ int parse_command(char* line, char** argv) {
 int handle_redirection(char** argv, int* argc) {
     int i = 0;
     while (argv[i] != NULL) {
-        // 출력 재지향 (>)
         if (strcmp(argv[i], ">") == 0) {
-            if (argv[i + 1] == NULL) {
+            if (!argv[i+1]) {
                 fprintf(stderr, "출력 파일명이 필요합니다.\n");
                 return -1;
             }
+            int fd_out = open(argv[i+1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd_out < 0) { perror(argv[i+1]); return -1; }
+            dup2(fd_out, STDOUT_FILENO); close(fd_out);
 
-            int fd_out = open(argv[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (fd_out < 0) {
-                perror(argv[i + 1]);
-                return -1;
-            }
-            dup2(fd_out, STDOUT_FILENO);
-            close(fd_out);
-
-            // 명령어 인자 목록에서 >와 파일명 제거
+            // argv에서 >와 파일명 제거
             int j = i;
-            while (argv[j + 2] != NULL) {
-                argv[j] = argv[j + 2];
-                j++;
-            }
-            argv[j] = NULL;
-            argv[j + 1] = NULL;
-            continue;  // 다음 argv 체크
-
-        // 입력 재지향 (<)
-        } else if (strcmp(argv[i], "<") == 0) {
-            if (argv[i + 1] == NULL) {
+            while (argv[j+2] != NULL) { argv[j] = argv[j+2]; j++; }
+            argv[j] = NULL; argv[j+1] = NULL;
+            continue;  // i 그대로 반복
+        }
+        else if (strcmp(argv[i], "<") == 0) {
+            if (!argv[i+1]) {
                 fprintf(stderr, "입력 파일명이 필요합니다.\n");
                 return -1;
             }
+            int fd_in = open(argv[i+1], O_RDONLY);
+            if (fd_in < 0) { perror(argv[i+1]); return -1; }
+            dup2(fd_in, STDIN_FILENO); close(fd_in);
 
-            int fd_in = open(argv[i + 1], O_RDONLY);
-            if (fd_in < 0) {
-                perror(argv[i + 1]);
-                return -1;
-            }
-            dup2(fd_in, STDIN_FILENO);
-            close(fd_in);
-
-            // 명령어 인자 목록에서 <와 파일명 제거
+            // argv에서 <와 파일명 제거
             int j = i;
-            while (argv[j + 2] != NULL) {
-                argv[j] = argv[j + 2];
-                j++;
-            }
-            argv[j] = NULL;
-            argv[j + 1] = NULL;
-            continue;  // 다음 argv 체크
+            while (argv[j+2] != NULL) { argv[j] = argv[j+2]; j++; }
+            argv[j] = NULL; argv[j+1] = NULL;
+            continue;
         }
-
-        i++; // 현재 argv 정상 명령어이면 다음으로 이동
+        i++; // 일반 명령어이면 다음으로 이동
     }
 
-    // argc 업데이트 (필요시)
-    if (argc != NULL) {
+    // argc 업데이트
+    if (argc) {
         int count = 0;
         while (argv[count] != NULL) count++;
         *argc = count;
@@ -142,6 +121,7 @@ int handle_redirection(char** argv, int* argc) {
 
     return 0;
 }
+
 
 
 // 명령 실행 및 I/O/파이프 처리
