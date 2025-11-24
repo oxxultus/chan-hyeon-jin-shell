@@ -75,54 +75,54 @@ int parse_command(char* line, char** argv) {
     return argc;
 }
 
-// 4. I/O 재지향 처리 (<, >)
+// 4. I/O 재지향 처리 (<, >) - 동시에 여러 리다이렉션 처리 가능
 int handle_redirection(char** argv, int* argc) {
-    int i;
-    for (i = 0; argv[i] != NULL; i++) {
-        // 출력 재지향 (>)
+    int i = 0;
+    while (argv[i] != NULL) {
         if (strcmp(argv[i], ">") == 0) {
-            if (argv[i + 1] == NULL) {
+            if (!argv[i+1]) {
                 fprintf(stderr, "출력 파일명이 필요합니다.\n");
                 return -1;
             }
-            // 표준 출력(1)을 새 파일로 재지향 (TRUNC: 덮어쓰기)
-            int fd_out = open(argv[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (fd_out < 0) {
-                perror(argv[i + 1]);
-                return -1;
-            }
-            dup2(fd_out, 1);
-            close(fd_out);
+            int fd_out = open(argv[i+1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd_out < 0) { perror(argv[i+1]); return -1; }
+            dup2(fd_out, STDOUT_FILENO); close(fd_out);
 
-            // 명령어 인자 목록에서 >와 파일명 제거
-            argv[i] = NULL;
-            if (argc != NULL) *argc = i;
-            break;
+            // argv에서 >와 파일명 제거
+            int j = i;
+            while (argv[j+2] != NULL) { argv[j] = argv[j+2]; j++; }
+            argv[j] = NULL; argv[j+1] = NULL;
+            continue;  // i 그대로 반복
         }
-
-        // 입력 재지향 (<)
         else if (strcmp(argv[i], "<") == 0) {
-            if (argv[i + 1] == NULL) {
+            if (!argv[i+1]) {
                 fprintf(stderr, "입력 파일명이 필요합니다.\n");
                 return -1;
             }
-            // 표준 입력(0)을 파일에서 읽도록 재지향
-            int fd_in = open(argv[i + 1], O_RDONLY);
-            if (fd_in < 0) {
-                perror(argv[i + 1]);
-                return -1;
-            }
-            dup2(fd_in, 0);
-            close(fd_in);
+            int fd_in = open(argv[i+1], O_RDONLY);
+            if (fd_in < 0) { perror(argv[i+1]); return -1; }
+            dup2(fd_in, STDIN_FILENO); close(fd_in);
 
-            // 명령어 인자 목록에서 <와 파일명 제거
-            argv[i] = NULL;
-            if (argc != NULL) *argc = i;
-            break;
+            // argv에서 <와 파일명 제거
+            int j = i;
+            while (argv[j+2] != NULL) { argv[j] = argv[j+2]; j++; }
+            argv[j] = NULL; argv[j+1] = NULL;
+            continue;
         }
+        i++; // 일반 명령어이면 다음으로 이동
     }
+
+    // argc 업데이트
+    if (argc) {
+        int count = 0;
+        while (argv[count] != NULL) count++;
+        *argc = count;
+    }
+
     return 0;
 }
+
+
 
 // 명령 실행 및 I/O/파이프 처리
 void execute_command(char** argv, int background) {

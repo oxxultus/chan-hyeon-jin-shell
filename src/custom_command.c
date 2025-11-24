@@ -197,29 +197,38 @@ int custom_rm(char** argv) {
 }
 
 int custom_cat(char** argv) {
-    if (argv[1] == NULL) {
-        fprintf(stderr, "사용법: cat <파일명>\n");
-        return 1;
-    }
+    FILE* fp = NULL;
+    int use_stdin = 0;
 
-    // 파일명이 있을 경우에는 해당하는 파일에서 값을 읽어와서 불러와야하고
-    // 파일명이 존재하지 않는 경우에는 표준입력으로 값을 입력받아서 처리해야한다.
-    FILE *fp = fopen(argv[1], "r");
-    if (fp == NULL) {
-        perror("cat");
-        return 1;
+    // 파일명 없으면 stdin 사용
+    if (argv[1] == NULL) {
+        fp = stdin;
+        use_stdin = 1;
+    } else {
+        // 파일명 있으면 파일 열기
+        fp = fopen(argv[1], "r");
+        if (fp == NULL) {
+            perror("cat");
+            return 1;
+        }
     }
 
     char buffer[4096];
     size_t bytes;
 
+    // stdin 또는 파일에서 읽어서 stdout으로 출력
     while ((bytes = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
         fwrite(buffer, 1, bytes, stdout);
     }
 
-    fclose(fp);
+    // stdin은 닫으면 안 됨
+    if (!use_stdin) {
+        fclose(fp);
+    }
+
     return 0;
 }
+
 
 int custom_grep(char** argv) {
     // 1. 검색어는 필수, 파일명은 옵션
