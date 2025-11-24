@@ -129,17 +129,17 @@ int custom_rmdir(char** argv) {
 	 return 0;
  }
 int custom_ln(char** argv) { 
- if (argv[1] == NULL || argv[2] == NULL) { // 원본 파일과 링크 파일 이름이 제공되었는지 확인
-        fprintf(stderr, "원본 파일과 링크 파일 이름을 확인해주세요\n");
-        return 1; // 오류 코드 반환
-    }
+    if (argv[1] == NULL || argv[2] == NULL) { // 원본 파일과 링크 파일 이름이 제공되었는지 확인
+            fprintf(stderr, "원본 파일과 링크 파일 이름을 확인해주세요\n");
+            return 1; // 오류 코드 반환
+        }
 
-    // 하드링크 생성
-    if (link(argv[1], argv[2]) != 0) {
-        perror("ln");
-        return 1; // 오류 반환
-    }
-return 0;
+        // 하드링크 생성
+        if (link(argv[1], argv[2]) != 0) {
+            perror("ln");
+            return 1; // 오류 반환
+        }
+    return 0;
  }
 int custom_cp(char** argv) { 
   if(argv[1] == NULL || argv[2] == NULL) {
