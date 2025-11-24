@@ -222,21 +222,30 @@ int custom_cat(char** argv) {
 }
 
 int custom_grep(char** argv) {
-    if (argv[1] == NULL || argv[2] == NULL) {
-        fprintf(stderr, "사용법: grep <검색어> <파일>\n");
+    // 1. 검색어는 필수, 파일명은 옵션
+    if (argv[1] == NULL) {
+        fprintf(stderr, "사용법: grep <검색어> [파일]\n");
         return 1;
     }
 
-    // 파일명 인자는 필수가 아니게 수정해야함 그외에는 cat 과 동일하게 수정해야됨
     char* keyword = argv[1];
-    char* filename = argv[2];
+    FILE* fp = NULL;
+    int use_stdin = 0;   // stdin을 쓰는지 여부
 
-    FILE* fp = fopen(filename, "r");
-    if (fp == NULL) {
-        perror("grep");
-        return 1;
+    // 2. 파일명이 없으면 표준입력(stdin)에서 읽기
+    if (argv[2] == NULL) {
+        fp = stdin;      // FD 0에 연결된 표준입력
+        use_stdin = 1;
+    } else {
+        // 3. 파일명이 있으면 그 파일을 연다
+        fp = fopen(argv[2], "r");
+        if (fp == NULL) {
+            perror("grep");
+            return 1;
+        }
     }
 
+    // 4. 한 줄씩 읽으면서 keyword가 포함된 줄만 출력
     char line[4096];
     while (fgets(line, sizeof(line), fp) != NULL) {
         if (strstr(line, keyword) != NULL) {
@@ -244,9 +253,14 @@ int custom_grep(char** argv) {
         }
     }
 
-    fclose(fp);
+    // 5. stdin은 fclose 하면 안 되니까, 파일을 연 경우에만 닫기
+    if (!use_stdin) {
+        fclose(fp);
+    }
+
     return 0;
 }
+
 
 
 // 유틸리티 함수
