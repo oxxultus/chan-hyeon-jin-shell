@@ -202,6 +202,8 @@ int custom_cat(char** argv) {
         return 1;
     }
 
+    // 파일명이 있을 경우에는 해당하는 파일에서 값을 읽어와서 불러와야하고
+    // 파일명이 존재하지 않는 경우에는 표준입력으로 값을 입력받아서 처리해야한다.
     FILE *fp = fopen(argv[1], "r");
     if (fp == NULL) {
         perror("cat");
@@ -225,6 +227,7 @@ int custom_grep(char** argv) {
         return 1;
     }
 
+    // 파일명 인자는 필수가 아니게 수정해야함 그외에는 cat 과 동일하게 수정해야됨
     char* keyword = argv[1];
     char* filename = argv[2];
 
